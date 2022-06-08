@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.1.0/mdb.min.css" rel="stylesheet" />
+    <title>Notes</title>
+</head>
+<body class="p-5 pb-lg-5">
+    <div class="modal fade" id="edit-note" data-mdb-backdrop="static" data-mdb-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Note</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-outline w-100 mb-3">
+                        <input class="form-control" type="text" id="title">
+                        <label class="form-label" for="title">Note Title</label>
+                    </div>
+                    <div class="form-outline w-100">
+                        <textarea class="form-control" id="content"></textarea>
+                        <label class="form-label" for="content">Note Content</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-mdb-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="save-note" note="0">
+                        <span class="spinner-border spinner-border-sm collapse" role="status" aria-hidden="true" id="save-button-animation"></span>
+                        <span id="save-button-text">Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="create-note" data-mdb-backdrop="static" data-mdb-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Note</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-outline w-100 mb-3">
+                        <input class="form-control" type="text" id="title">
+                        <label class="form-label" for="title">Note Title</label>
+                    </div>
+                    <div class="form-outline w-100">
+                        <textarea class="form-control" id="content"></textarea>
+                        <label class="form-label" for="content">Note Content</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-mdb-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="create-button" note="0">
+                        <span class="spinner-border spinner-border-sm collapse" role="status" aria-hidden="true" id="create-button-animation"></span>
+                        <span id="create-button-text">Create</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="position-absolute h-auto w-100 justify-content-center d-flex align-items-lg-center">
+        <div class="w-75 shadow-1-strong p-4 rounded h-auto">
+            <div class="w-100 d-flex">
+                <div class="w-75 col-1">
+                    <h1>Notes</h1>
+                </div>
+                <div class="w-25 col-2 justify-content-end align-content-end text-end">
+                    <button class="btn btn-secondary btn-lg" id="create-new-note">
+                        <i class="fas fa-plus"></i>
+                        New
+                    </button>
+                </div>
+            </div>
+            <div class="w-100 mt-5" id="notes">{% for note in notes %}<div class="w-100 shadow-1-strong p-4 align-items-center d-flex"><div class="w-25 col-1"><h3>{{note['title']}}</h3></div><div class="w-50 col-2 text-center"><h5>{{note['date']}}</h5></div><div class="w-25 col-3 justify-content-end align-content-end text-end"><button class="btn btn-secondary me-2" id="edit-note" note="{{note['id']}}"><i class="fas fa-pencil-alt"></i></button><button class="btn btn-secondary" id="del-note" note="{{note['id']}}"><i class="fas fa-trash-alt"></i></button></div></div>{% endfor %}</div>
+            <div id="no-notes" class="text-center collapse">
+                <h1>You have no notes</h1>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/4.1.0/mdb.min.js"></script>
+    <script type="text/javascript">
+        const editNoteModal = new mdb.Modal(document.getElementById('edit-note'))
+        const createNoteModal = new mdb.Modal(document.getElementById('create-note'))
+        $(document).ready(function() {
+            setInterval(function(){
+                $.get({
+                    url:'/notes.json',
+                    complete:function(xhr){
+                        var notes = JSON.parse(xhr.responseText)['notes'];
+                        var html = '';
+                        if (notes.length !== 0){
+                            $('#no-notes').addClass('collapse')
+                            for(var i = 0; i < notes.length; i++){
+                                html +=     '<div class="w-100 shadow-1-strong p-4 d-inline-block align-items-center d-flex">';
+                                html +=         '<div class="w-25 col-1">';
+                                html +=             '<h3>' + notes[i].title + '</h3>';
+                                html +=         '</div>';
+                                html +=         '<div class="w-50 col-2 text-center">';
+                                html +=             '<h5>' + notes[i].date + '</h5>';
+                                html +=         '</div>';
+                                html +=         '<div class="w-25 col-3 justify-content-end align-content-end text-end">';
+                                html +=             '<button class="btn btn-secondary me-2" id="edit-note" note="'+ notes[i].id +'">';
+                                html +=                 '<i class="fas fa-pencil-alt"></i>';
+                                html +=             '</button>';
+                                html +=             '<button class="btn btn-secondary" id="del-note" note="'+ notes[i].id +'">';
+                                html +=                 '<i class="fas fa-trash-alt"></i>';
+                                html +=             '</button>';
+                                html +=         '</div>';
+                                html +=     '</div>';
+                            }
+                            if ($('#notes').html() != html) {
+                                $('#notes').html(html);
+                            }
+                        }else{
+                            $('#notes').html('');
+                            $('#no-notes').removeClass('collapse')
+                        }
+                    }
+                })
+            },500)
+        });
+        $("#create-new-note").on('click',function(){
+            createNoteModal.toggle();
+        })
+        $('#create-note').on('click','#create-button',function(){
+            $('#create-note #create-button-text').toggleClass('collapse');
+            $('#create-note #create-button-animation').toggleClass('collapse');
+            var note = $(this).attr('note');
+            var title = $('#create-note #title').val();
+            var content = $('#create-note #content').val();
+            $.post({
+                url:'/notes/'+note+'.json',
+                data:{
+                    title:title,
+                    content:content
+                },
+                complete:function(xhr){
+                    createNoteModal.toggle();
+                    $('#create-note #title').val('');
+                    $('#create-note #content').val('');
+                    $('#create-note #create-button-text').toggleClass('collapse');
+                    $('#create-note #create-button-animation').toggleClass('collapse');
+                }
+            })
+        })
+        $('#notes').on('click','#edit-note',function(){
+            var selectedNote = $(this).attr('note');
+            $.get({
+                url:'/notes/'+selectedNote+'.json',
+                complete:function(xhr){
+                    var note = JSON.parse(xhr.responseText);
+                    $('#edit-note #content').val(note.content);
+                    $('#edit-note #title').val(note.title);
+                    $('#edit-note #save-note').attr('note',selectedNote);
+                    editNoteModal.toggle();
+                }
+            })
+        });
+        $('#edit-note').on('click','#save-note',function(){
+            $('#edit-note #save-button-text').toggleClass('collapse');
+            $('#edit-note #save-button-animation').toggleClass('collapse');
+            var note = $(this).attr('note');
+            var title = $('#edit-note #title').val();
+            var content = $('#edit-note #content').val();
+            $.post({
+                url:'/notes/'+note+'.json',
+                data:{
+                    title:title,
+                    content:content
+                },
+                complete:function(xhr){
+                    editNoteModal.toggle();
+                    $('#edit-note #save-button-text').toggleClass('collapse');
+                    $('#edit-note #save-button-animation').toggleClass('collapse');
+                }
+            })
+        });
+        $('#notes').on('click','#del-note',function(){
+            var note = $(this).attr('note');
+            $.ajax({
+                url:'/notes/'+note+'.json',
+                type:'DELETE',
+                complete:function(xhr){
+                    $('#notes').html('');
+                }
+            })
+        });
+    </script>
+</body>
+</html>
